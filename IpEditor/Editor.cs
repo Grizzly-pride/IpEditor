@@ -9,12 +9,26 @@ internal static class Editor
 
     public static async Task EditOMCH(List<BaseStation> baseStations)
     {
+        var file = new FileInfo(PathTargetExcelFile);
+        using var package = new ExcelPackage(file);
+        await package.LoadAsync(file);
+        var workSheet = package.Workbook.Worksheets.First(a => a.Name.Equals("OMCH"));
 
+
+
+
+
+        foreach (var bs in baseStations)
+        {
+            var s = workSheet.Cells.FirstOrDefault(c => c.Address.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase));
+
+
+
+        }
     }
 
     public static async Task<List<BaseStation>> GetSourceData()
     {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         var file = new FileInfo(PathSourceExcelFile);
         using var package = new ExcelPackage(file);
 
@@ -53,6 +67,8 @@ internal static class Editor
             var bs = new BaseStation(nameBS, oam, s1c, s1u);
 
             baseStations.Add(bs);
+
+            Console.WriteLine($"Get eNodeB: {bs.Name}");
 
             row += 1;
         }
