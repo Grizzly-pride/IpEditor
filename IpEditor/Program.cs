@@ -15,6 +15,8 @@ await Editor.EditOMCH(baseStations);
 await Editor.EditSCTPLNK(baseStations);
 await Editor.EditSCTPHOST(baseStations);
 await Editor.EditUSERPLANEHOST(baseStations);
+await Editor.EditIPPATH(baseStations);
+await Editor.EditSRCIPRT(baseStations);
 
 Editor.CloseTargetFile();
 
