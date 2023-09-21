@@ -30,9 +30,11 @@ internal static class Editor
         _package?.Dispose();
     }
 
+    #region Edit
     public static async Task EditOMCH(List<BaseStation> baseStations)
     {
-        var workSheet = GetWorkSheet("OMCH");
+        var nameSheet = "OMCH";
+        var workSheet = GetWorkSheet(nameSheet);
         if (workSheet == null) return; 
 
         foreach (var bs in baseStations)
@@ -52,12 +54,15 @@ internal static class Editor
                 }
             }
         }
-        await _package.SaveAsync();       
+        await _package.SaveAsync();
+
+        Logger.Info($"Has been edit {nameSheet} successful.");
     }
 
     public static async Task EditSCTPLNK(List<BaseStation> baseStations)
     {
-        var workSheet = GetWorkSheet("SCTPLNK");
+        var nameSheet = "SCTPLNK";
+        var workSheet = GetWorkSheet(nameSheet);
         if (workSheet == null) return;
 
         foreach (var bs in baseStations)
@@ -72,12 +77,69 @@ internal static class Editor
                 foreach (var row in rows)
                 {
                     workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
-                    workSheet.Cells[row, 14].Value = bs.OAM.SourceIp;
+                    workSheet.Cells[row, 14].Value = bs.S1C.SourceIp;
                 }
             }
         }
         await _package.SaveAsync();
+
+        Logger.Info($"Has been edit {nameSheet} successful.");
     }
+
+    public static async Task EditSCTPHOST(List<BaseStation> baseStations)
+    {
+        var nameSheet = "SCTPHOST";
+        var workSheet = GetWorkSheet(nameSheet);
+        if (workSheet == null) return;
+
+        foreach (var bs in baseStations)
+        {
+            var rows = workSheet!.Cells["b:b"]
+                .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(i => i.End.Row)
+                .ToList();
+
+            if (rows.Any())
+            {
+                foreach (var row in rows)
+                {
+                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, 6].Value = bs.S1C.SourceIp;
+                }
+            }
+        }
+        await _package.SaveAsync();
+
+        Logger.Info($"Has been edit {nameSheet} successful.");
+    }
+
+    public static async Task EditUSERPLANEHOST(List<BaseStation> baseStations)
+    {
+        var nameSheet = "USERPLANEHOST";
+        var workSheet = GetWorkSheet(nameSheet);
+        if (workSheet == null) return;
+
+        foreach (var bs in baseStations)
+        {
+            var rows = workSheet!.Cells["b:b"]
+                .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(i => i.End.Row)
+                .ToList();
+
+            if (rows.Any())
+            {
+                foreach (var row in rows)
+                {
+                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, 8].Value = bs.S1U.SourceIp;
+                }
+            }
+        }
+        await _package.SaveAsync();
+
+        Logger.Info($"Has been edit {nameSheet} successful.");
+    }
+    #endregion
 
     public static async Task<List<BaseStation>> LoadSourceData(string filePath)
     {
@@ -144,7 +206,8 @@ internal static class Editor
         ExcelWorksheet? workSheet = null;
         try
         {
-            workSheet = _package.Workbook.Worksheets.First(a => a.Name.Equals(sheetName));
+            workSheet = _package.Workbook.Worksheets
+                .First(a => a.Name.Equals(sheetName, StringComparison.OrdinalIgnoreCase));
             return workSheet;
 
         }

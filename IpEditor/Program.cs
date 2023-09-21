@@ -13,6 +13,8 @@ await Editor.OpenTargetFile(targetFilePatch);
 
 await Editor.EditOMCH(baseStations);
 await Editor.EditSCTPLNK(baseStations);
+await Editor.EditSCTPHOST(baseStations);
+await Editor.EditUSERPLANEHOST(baseStations);
 
 Editor.CloseTargetFile();
 
