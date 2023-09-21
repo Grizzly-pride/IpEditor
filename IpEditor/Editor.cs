@@ -56,7 +56,7 @@ internal static class Editor
         }
         await _package.SaveAsync();
 
-        Logger.Info($"Has been edit {nameSheet} successful.");
+        Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
 
     public static async Task EditSCTPLNK(List<BaseStation> baseStations)
@@ -83,7 +83,7 @@ internal static class Editor
         }
         await _package.SaveAsync();
 
-        Logger.Info($"Has been edit {nameSheet} successful.");
+        Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
 
     public static async Task EditSCTPHOST(List<BaseStation> baseStations)
@@ -110,7 +110,7 @@ internal static class Editor
         }
         await _package.SaveAsync();
 
-        Logger.Info($"Has been edit {nameSheet} successful.");
+        Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
 
     public static async Task EditUSERPLANEHOST(List<BaseStation> baseStations)
@@ -137,7 +137,34 @@ internal static class Editor
         }
         await _package.SaveAsync();
 
-        Logger.Info($"Has been edit {nameSheet} successful.");
+        Logger.Info($"{nameSheet} sheet has been edit successfully.");
+    }
+
+    public static async Task EditIPPATH(List<BaseStation> baseStations)
+    {
+        var nameSheet = "IPPATH";
+        var workSheet = GetWorkSheet(nameSheet);
+        if (workSheet == null) return;
+
+        foreach (var bs in baseStations)
+        {
+            var rows = workSheet!.Cells["b:b"]
+                .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(i => i.End.Row)
+                .ToList();
+
+            if (rows.Any())
+            {
+                foreach (var row in rows)
+                {
+                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, 20].Value = bs.S1U.SourceIp;
+                }
+            }
+        }
+        await _package.SaveAsync();
+
+        Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
     #endregion
 
