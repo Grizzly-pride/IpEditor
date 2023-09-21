@@ -1,76 +1,54 @@
 ﻿using OfficeOpenXml;
 namespace IpEditor;
 
+
 internal static class Editor
 {
     private static ExcelPackage _package;
 
-    public static async Task OpenTargetFile(FileInfo file)
+    public static async Task OpenTargetFile(string filePath)
     {
-        using var _package = new ExcelPackage(file);
+        var file = new FileInfo(filePath);
+        _package = new ExcelPackage(file);
         await _package.LoadAsync(file);
     }
 
+    public static void CloseTargetFile()
+    {
+        _package?.Dispose();
+    }
 
     public static async Task EditOMCH(List<BaseStation> baseStations)
     {
-        //var file = new FileInfo(PathTargetExcelFile);
-        //using var package = new ExcelPackage(file);
-        //await package.LoadAsync(file);
-
-        var workSheet = _package.Workbook.Worksheets.First(a => a.Name.Equals("OMCH"));
+        string sheetName = "OMCH";
+        var workSheet = _package.Workbook.Worksheets.First(a => a.Name.Equals(sheetName))
+            ?? throw new NullReferenceException($"{sheetName} not found !!!");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet.Cells["b:b"]
+            var rows = workSheet!.Cells["b:b"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
 
-            foreach(var row in rows)
+            if (rows.Any())
             {
-                
+                foreach (var row in rows)
+                {
+                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, 6].Value = bs.OAM.SourceIp;
+                    workSheet.Cells[row, 7].Value = bs.OAM.Mask;
+                }
             }
         }
 
-        //var rows = workSheet.Cells["a:a"].GetCellValue<string>(1, 0);
-
-        //int rowCount = workSheet.Dimension.End.Row;
-
-        //int count = 0;
-
-        //for (int row = 3; row <= rowCount - 1; row++)
-        //{
-        //    var rowVal = workSheet.Cells[row, 2].Value.ToString();
-
-        //    if (rowVal.Equals("705621_Osovo"))
-        //    {
-        //         count++;
-        //    }
-        //};
-
-        //var query = workSheet.Cells["a:a"]
-        //    .Where(cel => cel.Value == ("Lerka"))
-        //    .Select(cel => cel.Address).ToList();
-
-        //var query = from cell in workSheet.Cells["b:b"]
-        //            where cell.Value.ToString() == "Lerka"
-        //            select cell.Rows;
-        //var list = query.ToList();
-        //foreach(var cell in query)
-        //{
-        //    Console.WriteLine($"{cell}");
-        //}
-
-        //int rowNum = searchCell.First();
-
-        //searchCell.ToList().ForEach(i => Console.WriteLine(i));
+        await _package.SaveAsync();
     }
 
-    public static async Task<List<BaseStation>> LoadSourceData(FileInfo file)
+    public static async Task<List<BaseStation>> LoadSourceData(string filePath)
     {
+        var file = new FileInfo(filePath);
         using var package = new ExcelPackage(file);
-
         await package.LoadAsync(file);
 
         var workSheet = package.Workbook.Worksheets[0];
@@ -82,7 +60,6 @@ internal static class Editor
 
         while (string.IsNullOrWhiteSpace(workSheet.Cells[row, column].Value?.ToString()) is false)
         {
-
             string nameBS = workSheet.Cells[row, column].Value.ToString()!;
 
             string sourceOAM = workSheet.Cells[row, column + 1].Value.ToString()!;
