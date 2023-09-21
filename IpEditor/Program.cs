@@ -12,6 +12,7 @@ List<BaseStation> baseStations = await Editor.LoadSourceData(sourceFilePath);
 await Editor.OpenTargetFile(targetFilePatch);
 
 await Editor.EditOMCH(baseStations);
+await Editor.EditSCTPLNK(baseStations);
 
 Editor.CloseTargetFile();
 
