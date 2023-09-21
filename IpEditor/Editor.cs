@@ -3,33 +3,72 @@ namespace IpEditor;
 
 internal static class Editor
 {
-    public static string PathSourceExcelFile { get; set; }
-    public static string PathTargetExcelFile { get; set; }
+    private static ExcelPackage _package;
+
+    public static async Task OpenTargetFile(FileInfo file)
+    {
+        using var _package = new ExcelPackage(file);
+        await _package.LoadAsync(file);
+    }
 
 
     public static async Task EditOMCH(List<BaseStation> baseStations)
     {
-        var file = new FileInfo(PathTargetExcelFile);
-        using var package = new ExcelPackage(file);
-        await package.LoadAsync(file);
-        var workSheet = package.Workbook.Worksheets.First(a => a.Name.Equals("OMCH"));
+        //var file = new FileInfo(PathTargetExcelFile);
+        //using var package = new ExcelPackage(file);
+        //await package.LoadAsync(file);
 
-
-
-
+        var workSheet = _package.Workbook.Worksheets.First(a => a.Name.Equals("OMCH"));
 
         foreach (var bs in baseStations)
         {
-            var s = workSheet.Cells.FirstOrDefault(c => c.Address.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase));
+            var rows = workSheet.Cells["b:b"]
+                .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(i => i.End.Row)
+                .ToList();
 
-
-
+            foreach(var row in rows)
+            {
+                
+            }
         }
+
+        //var rows = workSheet.Cells["a:a"].GetCellValue<string>(1, 0);
+
+        //int rowCount = workSheet.Dimension.End.Row;
+
+        //int count = 0;
+
+        //for (int row = 3; row <= rowCount - 1; row++)
+        //{
+        //    var rowVal = workSheet.Cells[row, 2].Value.ToString();
+
+        //    if (rowVal.Equals("705621_Osovo"))
+        //    {
+        //         count++;
+        //    }
+        //};
+
+        //var query = workSheet.Cells["a:a"]
+        //    .Where(cel => cel.Value == ("Lerka"))
+        //    .Select(cel => cel.Address).ToList();
+
+        //var query = from cell in workSheet.Cells["b:b"]
+        //            where cell.Value.ToString() == "Lerka"
+        //            select cell.Rows;
+        //var list = query.ToList();
+        //foreach(var cell in query)
+        //{
+        //    Console.WriteLine($"{cell}");
+        //}
+
+        //int rowNum = searchCell.First();
+
+        //searchCell.ToList().ForEach(i => Console.WriteLine(i));
     }
 
-    public static async Task<List<BaseStation>> GetSourceData()
+    public static async Task<List<BaseStation>> LoadSourceData(FileInfo file)
     {
-        var file = new FileInfo(PathSourceExcelFile);
         using var package = new ExcelPackage(file);
 
         await package.LoadAsync(file);

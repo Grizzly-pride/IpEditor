@@ -1,11 +1,15 @@
 ﻿using IpEditor;
 using OfficeOpenXml;
 
+
+
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
-Editor.PathSourceExcelFile = @"C:\Users\Medve\Desktop\7BS_IP\Source.xlsx";
-Editor.PathTargetExcelFile = @"C:\Users\Medve\Desktop\7BS_IP\Target.xlsx";
+var sourceFilePath = @"C:\Users\alexandr.medved\Desktop\Test\Source.xlsx";
+var targetFilePatch = @"C:\Users\alexandr.medved\Desktop\Test\Target.xlsx";
 
-List<BaseStation> baseStations = await Editor.GetSourceData();
 
+List<BaseStation> baseStations = await Editor.LoadSourceData(new FileInfo(sourceFilePath));
+
+await Editor.OpenTargetFile(new FileInfo(targetFilePatch));
 await Editor.EditOMCH(baseStations);
