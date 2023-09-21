@@ -166,6 +166,43 @@ internal static class Editor
 
         Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
+
+    public static async Task EditSRCIPRT(List<BaseStation> baseStations)
+    {
+        var nameSheet = "SRCIPRT";
+        var workSheet = GetWorkSheet(nameSheet);
+        if (workSheet == null) return;
+
+        foreach (var bs in baseStations)
+        {
+            var rows = workSheet!.Cells["b:b"]
+                .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(i => i.End.Row)
+                .ToList();
+
+            if (rows.Any())
+            {
+                foreach (var row in rows)
+                {
+                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();                   
+                }
+                workSheet.Cells[rows[0], 8].Value = bs.OAM.SourceIp;
+                workSheet.Cells[rows[0], 10].Value = bs.OAM.DestinationIp;
+                workSheet.Cells[rows[0], 14].Value = "O&M";
+
+                workSheet.Cells[rows[1], 8].Value = bs.S1U.SourceIp;
+                workSheet.Cells[rows[1], 10].Value = bs.S1U.DestinationIp;
+                workSheet.Cells[rows[1], 14].Value = "S1U-MTS";
+
+                workSheet.Cells[rows[2], 8].Value = bs.S1C.SourceIp;
+                workSheet.Cells[rows[2], 10].Value = bs.S1C.DestinationIp;
+                workSheet.Cells[rows[2], 14].Value = "S1C-MTS";
+            }
+        }
+        await _package.SaveAsync();
+
+        Logger.Info($"{nameSheet} sheet has been edit successfully.");
+    }
     #endregion
 
     public static async Task<List<BaseStation>> LoadSourceData(string filePath)
