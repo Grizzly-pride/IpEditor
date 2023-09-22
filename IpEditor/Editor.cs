@@ -219,20 +219,6 @@ internal static class Editor
 
         Logger.Info($"Editing {nameSheet}...");
 
-
-    
-        var startRow = workSheet.Dimension.Start.Row;
-        var endRow = workSheet.Dimension.End.Row;
-
-        int startCol = workSheet.Dimension.Start.Column;
-        int endCol = workSheet.Dimension.End.Column;
-
-        var lastUsedRow = GetLastUsedRow(workSheet);
-
-
-        Console.WriteLine("asdas");
-
-
         //foreach (var bs in baseStations)
         //{
         //    var rows = workSheet!.Cells["b:b"]
@@ -242,10 +228,58 @@ internal static class Editor
 
         //    if (rows.Any())
         //    {
-
+        //        foreach (var row in rows)
+        //        {
+        //            workSheet.Cells[row, 1].Value = Operation.RMV.ToString();
+        //        }
         //    }
         //}
-        //await _package.SaveAsync();       
+
+        var lastUsedRow = GetLastUsedRow(workSheet);
+        var firstColumn = workSheet.Dimension.Start.Column;
+        var endColumn = workSheet.Dimension.End.Column;
+        var firstRow = workSheet.Dimension.Start.Row;
+        var workRange = workSheet.Cells[firstRow + 2, firstColumn, lastUsedRow, endColumn];
+
+        
+        foreach (var bs in baseStations)
+        {
+            var rows = workRange
+                .Where(r => (r.Value is null ? string.Empty : r.Value.ToString())!.StartsWith(bs.Name))
+                .Select(i => i.Start.Row)
+                .ToList();
+
+            if (rows.Any())
+            {
+
+
+                
+                //Console.WriteLine(workRange.GetCellValue<string>(0, 9));
+                //Console.WriteLine(workRange.GetCellValue<string>(rows[1], 9));
+                //Console.WriteLine(workRange.GetCellValue<string>(rows[2], 9));
+                //workRange.SetCellValue(rows[0], 9, bs.OAM.SourceIp);
+                //workRange.SetCellValue(rows[1], 9, bs.S1U.SourceIp);
+                //workRange.SetCellValue(rows[2], 9, bs.S1C.SourceIp);
+                
+                //workRange.SetCellValue(rows[0], 0, Operation.ADD.ToString());
+                //workRange.SetCellValue(rows[1], 0, Operation.ADD.ToString());
+                //workRange.SetCellValue(rows[2], 0, Operation.ADD.ToString());
+
+
+                //workRange.SetCellValue(rows[0], 10, bs.OAM.Mask);
+                //workRange.SetCellValue(rows[1], 10, bs.S1U.Mask);
+                //workRange.SetCellValue(rows[2], 10, bs.S1C.Mask);
+
+                //workRange.SetCellValue(rows[0], 11, "O&M");
+                //workRange.SetCellValue(rows[1], 11, "S1U-MTS");
+                //workRange.SetCellValue(rows[2], 11, "S1C-MTS");
+
+            }
+        }
+
+        workRange.Copy(workSheet.Cells[lastUsedRow + 1, firstColumn]);
+
+        await _package.SaveAsync();       
     }
     #endregion
 
