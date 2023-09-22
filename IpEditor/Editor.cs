@@ -12,8 +12,11 @@ internal static class Editor
         try
         {
             var file = new FileInfo(filePath);
-            _package = new ExcelPackage(file);
-            await _package.LoadAsync(file);
+            if (file.Exists)
+            {
+                _package = new ExcelPackage(file);
+                await _package.LoadAsync(file);
+            }
         }
         catch (FileNotFoundException e)
         {
@@ -219,66 +222,47 @@ internal static class Editor
 
         Logger.Info($"Editing {nameSheet}...");
 
-        //foreach (var bs in baseStations)
-        //{
-        //    var rows = workSheet!.Cells["b:b"]
-        //        .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
-        //        .Select(i => i.End.Row)
-        //        .ToList();
-
-        //    if (rows.Any())
-        //    {
-        //        foreach (var row in rows)
-        //        {
-        //            workSheet.Cells[row, 1].Value = Operation.RMV.ToString();
-        //        }
-        //    }
-        //}
-
         var lastUsedRow = GetLastUsedRow(workSheet);
+        var firstRow = workSheet.Dimension.Start.Row;
         var firstColumn = workSheet.Dimension.Start.Column;
         var endColumn = workSheet.Dimension.End.Column;
-        var firstRow = workSheet.Dimension.Start.Row;
         var workRange = workSheet.Cells[firstRow + 2, firstColumn, lastUsedRow, endColumn];
 
-        
+        workRange.Copy(workSheet.Cells[lastUsedRow + 1, firstColumn]);
+
+        for ( int i = 0; i < workRange.Rows; i++ )
+        {
+            workRange.SetCellValue(i, 0, Operation.RMV.ToString());
+        }
+
         foreach (var bs in baseStations)
         {
-            var rows = workRange
-                .Where(r => (r.Value is null ? string.Empty : r.Value.ToString())!.StartsWith(bs.Name))
-                .Select(i => i.Start.Row)
+            var rows = workSheet!.Cells[lastUsedRow + 1, 2, lastUsedRow + workRange.Rows, 2]
+                .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(i => i.End.Row)
                 .ToList();
 
             if (rows.Any())
             {
+                foreach (var row in rows)
+                {
+                    workSheet.Cells[row, 1].Value = Operation.ADD.ToString();
+                }
+                workSheet.Cells[rows[0], 10].Value = bs.OAM.SourceIp;
+                workSheet.Cells[rows[0], 11].Value = bs.OAM.Mask;
+                workSheet.Cells[rows[0], 12].Value = "O&M";
 
+                workSheet.Cells[rows[1], 10].Value = bs.S1U.SourceIp;
+                workSheet.Cells[rows[1], 11].Value = bs.S1U.Mask;
+                workSheet.Cells[rows[1], 12].Value = "S1U-MTS";
 
-                
-                //Console.WriteLine(workRange.GetCellValue<string>(0, 9));
-                //Console.WriteLine(workRange.GetCellValue<string>(rows[1], 9));
-                //Console.WriteLine(workRange.GetCellValue<string>(rows[2], 9));
-                //workRange.SetCellValue(rows[0], 9, bs.OAM.SourceIp);
-                //workRange.SetCellValue(rows[1], 9, bs.S1U.SourceIp);
-                //workRange.SetCellValue(rows[2], 9, bs.S1C.SourceIp);
-                
-                //workRange.SetCellValue(rows[0], 0, Operation.ADD.ToString());
-                //workRange.SetCellValue(rows[1], 0, Operation.ADD.ToString());
-                //workRange.SetCellValue(rows[2], 0, Operation.ADD.ToString());
+                workSheet.Cells[rows[2], 10].Value = bs.S1C.SourceIp;
+                workSheet.Cells[rows[2], 11].Value = bs.S1C.Mask;
+                workSheet.Cells[rows[2], 12].Value = "S1C-MTS";
 
-
-                //workRange.SetCellValue(rows[0], 10, bs.OAM.Mask);
-                //workRange.SetCellValue(rows[1], 10, bs.S1U.Mask);
-                //workRange.SetCellValue(rows[2], 10, bs.S1C.Mask);
-
-                //workRange.SetCellValue(rows[0], 11, "O&M");
-                //workRange.SetCellValue(rows[1], 11, "S1U-MTS");
-                //workRange.SetCellValue(rows[2], 11, "S1C-MTS");
-
+                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
             }
         }
-
-        workRange.Copy(workSheet.Cells[lastUsedRow + 1, firstColumn]);
-
         await _package.SaveAsync();       
     }
     #endregion
@@ -326,7 +310,7 @@ internal static class Editor
 
                 baseStations.Add(bs);
 
-                Logger.Info($"add eNodeB: {bs.Name}");
+                Logger.Info($"... eNodeB: {bs.Name} has been added.");
 
                 row += 1;
             }
