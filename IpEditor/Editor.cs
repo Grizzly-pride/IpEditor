@@ -35,7 +35,9 @@ internal static class Editor
     {
         var nameSheet = "OMCH";
         var workSheet = GetWorkSheet(nameSheet);
-        if (workSheet == null) return; 
+        if (workSheet is null) return;
+
+        Logger.Info($"Editing {nameSheet}...");
 
         foreach (var bs in baseStations)
         {
@@ -52,18 +54,19 @@ internal static class Editor
                     workSheet.Cells[row, 6].Value = bs.OAM.SourceIp;
                     workSheet.Cells[row, 7].Value = bs.OAM.Mask;
                 }
+                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
-
-        Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
 
     public static async Task EditSCTPLNK(List<BaseStation> baseStations)
     {
         var nameSheet = "SCTPLNK";
         var workSheet = GetWorkSheet(nameSheet);
-        if (workSheet == null) return;
+        if (workSheet is null) return;
+
+        Logger.Info($"Editing {nameSheet}...");
 
         foreach (var bs in baseStations)
         {
@@ -79,18 +82,19 @@ internal static class Editor
                     workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, 14].Value = bs.S1C.SourceIp;
                 }
+                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
-
-        Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
 
     public static async Task EditSCTPHOST(List<BaseStation> baseStations)
     {
         var nameSheet = "SCTPHOST";
         var workSheet = GetWorkSheet(nameSheet);
-        if (workSheet == null) return;
+        if (workSheet is null) return;
+
+        Logger.Info($"Editing {nameSheet}...");
 
         foreach (var bs in baseStations)
         {
@@ -106,18 +110,19 @@ internal static class Editor
                     workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, 6].Value = bs.S1C.SourceIp;
                 }
+                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
-
-        Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
 
     public static async Task EditUSERPLANEHOST(List<BaseStation> baseStations)
     {
         var nameSheet = "USERPLANEHOST";
         var workSheet = GetWorkSheet(nameSheet);
-        if (workSheet == null) return;
+        if (workSheet is null) return;
+
+        Logger.Info($"Editing {nameSheet}...");
 
         foreach (var bs in baseStations)
         {
@@ -133,18 +138,19 @@ internal static class Editor
                     workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, 8].Value = bs.S1U.SourceIp;
                 }
+                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
-
-        Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
 
     public static async Task EditIPPATH(List<BaseStation> baseStations)
     {
         var nameSheet = "IPPATH";
         var workSheet = GetWorkSheet(nameSheet);
-        if (workSheet == null) return;
+        if (workSheet is null) return;
+
+        Logger.Info($"Editing {nameSheet}...");
 
         foreach (var bs in baseStations)
         {
@@ -160,18 +166,19 @@ internal static class Editor
                     workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, 20].Value = bs.S1U.SourceIp;
                 }
+                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
-
-        Logger.Info($"{nameSheet} sheet has been edit successfully.");
     }
 
     public static async Task EditSRCIPRT(List<BaseStation> baseStations)
     {
         var nameSheet = "SRCIPRT";
         var workSheet = GetWorkSheet(nameSheet);
-        if (workSheet == null) return;
+        if (workSheet is null) return;
+
+        Logger.Info($"Editing {nameSheet}...");
 
         foreach (var bs in baseStations)
         {
@@ -197,11 +204,48 @@ internal static class Editor
                 workSheet.Cells[rows[2], 8].Value = bs.S1C.SourceIp;
                 workSheet.Cells[rows[2], 10].Value = bs.S1C.DestinationIp;
                 workSheet.Cells[rows[2], 14].Value = "S1C-MTS";
+
+                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
+    }
 
-        Logger.Info($"{nameSheet} sheet has been edit successfully.");
+    public static async Task EditDEVIP(List<BaseStation> baseStations)
+    {
+        var nameSheet = "DEVIP";
+        var workSheet = GetWorkSheet(nameSheet);
+        if (workSheet is null) return;
+
+        Logger.Info($"Editing {nameSheet}...");
+
+
+    
+        var startRow = workSheet.Dimension.Start.Row;
+        var endRow = workSheet.Dimension.End.Row;
+
+        int startCol = workSheet.Dimension.Start.Column;
+        int endCol = workSheet.Dimension.End.Column;
+
+        var lastUsedRow = GetLastUsedRow(workSheet);
+
+
+        Console.WriteLine("asdas");
+
+
+        //foreach (var bs in baseStations)
+        //{
+        //    var rows = workSheet!.Cells["b:b"]
+        //        .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
+        //        .Select(i => i.End.Row)
+        //        .ToList();
+
+        //    if (rows.Any())
+        //    {
+
+        //    }
+        //}
+        //await _package.SaveAsync();       
     }
     #endregion
 
@@ -215,7 +259,7 @@ internal static class Editor
             using var package = new ExcelPackage(file);
             await package.LoadAsync(file);
 
-            var workSheet = package.Workbook.Worksheets[0];
+            var workSheet = package.Workbook.Worksheets.First();
 
             int row = 2;
             int column = 1;
@@ -280,5 +324,22 @@ internal static class Editor
             Logger.Warning($"Sheet {sheetName} not found!");
         }
         return workSheet;     
+    }
+
+    private static int GetLastUsedRow(ExcelWorksheet sheet)
+    {
+        if (sheet.Dimension == null) return default;
+
+        var row = sheet.Dimension.End.Row;
+        while (row > 0)
+        {
+            var range = sheet.Cells[row, sheet.Dimension.Start.Column, row, sheet.Dimension.End.Column];
+            if (range.Any(c => !string.IsNullOrEmpty(c.Text)))
+            {
+                break;
+            }
+            row--;
+        }
+        return row;
     }
 }
