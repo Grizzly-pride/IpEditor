@@ -1,11 +1,70 @@
 ﻿using OfficeOpenXml;
-
 namespace IpEditor;
 
 
 internal static class Editor
 {
     private static ExcelPackage _package;
+
+    public static async Task<List<BaseStation>> LoadSourceData(string filePath)
+    {
+        var baseStations = new List<BaseStation>();
+
+        try
+        {
+            var file = new FileInfo(filePath);
+            using var package = new ExcelPackage(file);
+            await package.LoadAsync(file);
+
+            var workSheet = package.Workbook.Worksheets.First();
+
+            int row = 2;
+            int column = 1;
+
+            Logger.Info($"Loading data from a source file...");
+
+            while (string.IsNullOrWhiteSpace(workSheet.Cells[row, column].Value?.ToString()) is false)
+            {
+                string nameBS = workSheet.Cells[row, column].Value.ToString()!;
+
+                string sourceOAM = workSheet.Cells[row, column + 1].Value.ToString()!;
+                string nextHopOAM = workSheet.Cells[row, column + 2].Value.ToString()!;
+                string vlanOAM = workSheet.Cells[row, column + 3].Value.ToString()!;
+                string maskOAM = workSheet.Cells[row, column + 4].Value.ToString()!;
+                var oam = new Route(sourceOAM, nextHopOAM, vlanOAM, maskOAM);
+
+                string sourceS1C = workSheet.Cells[row, column + 5].Value.ToString()!;
+                string nextHopS1C = workSheet.Cells[row, column + 6].Value.ToString()!;
+                string vlanS1C = workSheet.Cells[row, column + 7].Value.ToString()!;
+                string maskS1C = workSheet.Cells[row, column + 8].Value.ToString()!;
+                var s1c = new Route(sourceS1C, nextHopS1C, vlanS1C, maskS1C);
+
+                string sourceS1U = workSheet.Cells[row, column + 5].Value.ToString()!;
+                string nextHopS1U = workSheet.Cells[row, column + 6].Value.ToString()!;
+                string vlanS1U = workSheet.Cells[row, column + 7].Value.ToString()!;
+                string maskS1U = workSheet.Cells[row, column + 8].Value.ToString()!;
+                var s1u = new Route(sourceS1U, nextHopS1U, vlanS1U, maskS1U);
+
+                var bs = new BaseStation(nameBS, oam, s1c, s1u);
+
+                baseStations.Add(bs);
+
+                Logger.Info($"... eNodeB: {bs.Name} has been added.");
+
+                row += 1;
+            }
+        }
+        catch (FileNotFoundException e)
+        {
+            Logger.Error($"File not found! {e.FileName}");
+        }
+        catch (IOException e)
+        {
+            Logger.Error($"File opened by another application! {e.StackTrace}");
+        }
+
+        return baseStations;
+    }
 
     public static async Task OpenTargetFile(string filePath)
     {
@@ -34,6 +93,34 @@ internal static class Editor
     }
 
     #region Edit
+    public static async Task EditIPCLKLNK(List<BaseStation> baseStations)
+    {
+        var nameSheet = "IPCLKLNK";
+        var workSheet = GetWorkSheet(nameSheet);
+        if (workSheet is null) return;
+
+        Logger.Info($"Editing {nameSheet}...");
+
+        foreach (var bs in baseStations)
+        {
+            var rows = workSheet!.Cells["b:b"]
+                .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(i => i.End.Row)
+                .ToList();
+
+            if (rows.Any())
+            {
+                foreach (var row in rows)
+                {
+                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, 8].Value = bs.S1C.SourceIp;
+                }
+                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+            }
+        }
+        await _package.SaveAsync();
+    }
+
     public static async Task EditOMCH(List<BaseStation> baseStations)
     {
         var nameSheet = "OMCH";
@@ -55,7 +142,7 @@ internal static class Editor
                 {
                     workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, 6].Value = bs.OAM.SourceIp;
-                    workSheet.Cells[row, 7].Value = bs.OAM.Mask;
+                    workSheet.Cells[row, 7].Value = bs.OAM.Mask;                  
                 }
                 Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
             }
@@ -265,67 +352,59 @@ internal static class Editor
         }
         await _package.SaveAsync();       
     }
-    #endregion
 
-    public static async Task<List<BaseStation>> LoadSourceData(string filePath)
+    public static async Task EditVLANMAP(List<BaseStation> baseStations)
     {
-        var baseStations = new List<BaseStation>();
+        var nameSheet = "VLANMAP";
+        var workSheet = GetWorkSheet(nameSheet);
+        if (workSheet is null) return;
 
-        try
+        Logger.Info($"Editing {nameSheet}...");
+
+        var lastUsedRow = GetLastUsedRow(workSheet);
+        var firstRow = workSheet.Dimension.Start.Row;
+        var firstColumn = workSheet.Dimension.Start.Column;
+        var endColumn = workSheet.Dimension.End.Column;
+        var workRange = workSheet.Cells[firstRow + 2, firstColumn, lastUsedRow, endColumn];
+
+        workRange.Copy(workSheet.Cells[lastUsedRow + 1, firstColumn]);
+
+        for (int i = 0; i < workRange.Rows; i++)
         {
-            var file = new FileInfo(filePath);
-            using var package = new ExcelPackage(file);
-            await package.LoadAsync(file);
+            workRange.SetCellValue(i, 0, Operation.RMV.ToString());
+        }
 
-            var workSheet = package.Workbook.Worksheets.First();
+        foreach (var bs in baseStations)
+        {
+            var rows = workSheet!.Cells[lastUsedRow + 1, 2, lastUsedRow + workRange.Rows, 2]
+                .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
+                .Select(i => i.End.Row)
+                .ToList();
 
-            int row = 2;
-            int column = 1;
-
-            Logger.Info($"Loading data from a source file...");
-
-            while (string.IsNullOrWhiteSpace(workSheet.Cells[row, column].Value?.ToString()) is false)
+            if (rows.Any())
             {
-                string nameBS = workSheet.Cells[row, column].Value.ToString()!;
+                foreach (var row in rows)
+                {
+                    workSheet.Cells[row, 1].Value = Operation.ADD.ToString();
+                }
+                workSheet.Cells[rows[0], 4].Value = bs.OAM.DestinationIp;
+                workSheet.Cells[rows[0], 5].Value = bs.OAM.Mask;
+                workSheet.Cells[rows[0], 7].Value = bs.OAM.Vlan;
 
-                string sourceOAM = workSheet.Cells[row, column + 1].Value.ToString()!;
-                string nextHopOAM = workSheet.Cells[row, column + 2].Value.ToString()!;
-                string vlanOAM = workSheet.Cells[row, column + 3].Value.ToString()!;
-                string maskOAM = workSheet.Cells[row, column + 4].Value.ToString()!;
-                var oam = new Route(sourceOAM, nextHopOAM, vlanOAM, maskOAM);
+                workSheet.Cells[rows[1], 4].Value = bs.S1C.DestinationIp;
+                workSheet.Cells[rows[1], 5].Value = bs.OAM.Mask;
+                workSheet.Cells[rows[1], 7].Value = bs.OAM.Vlan;
 
-                string sourceS1C = workSheet.Cells[row, column + 5].Value.ToString()!;
-                string nextHopS1C = workSheet.Cells[row, column + 6].Value.ToString()!;
-                string vlanS1C = workSheet.Cells[row, column + 7].Value.ToString()!;
-                string maskS1C = workSheet.Cells[row, column + 8].Value.ToString()!;
-                var s1c = new Route(sourceS1C, nextHopS1C, vlanS1C, maskS1C);
+                workSheet.Cells[rows[2], 4].Value = bs.OAM.DestinationIp;
+                workSheet.Cells[rows[2], 5].Value = bs.OAM.Mask;
+                workSheet.Cells[rows[2], 7].Value = bs.OAM.Vlan;
 
-                string sourceS1U = workSheet.Cells[row, column + 5].Value.ToString()!;
-                string nextHopS1U = workSheet.Cells[row, column + 6].Value.ToString()!;
-                string vlanS1U = workSheet.Cells[row, column + 7].Value.ToString()!;
-                string maskS1U = workSheet.Cells[row, column + 8].Value.ToString()!;
-                var s1u = new Route(sourceS1U, nextHopS1U, vlanS1U, maskS1U);
-
-                var bs = new BaseStation(nameBS, oam, s1c, s1u);
-
-                baseStations.Add(bs);
-
-                Logger.Info($"... eNodeB: {bs.Name} has been added.");
-
-                row += 1;
+                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
             }
         }
-        catch (FileNotFoundException e)
-        {
-            Logger.Error($"File not found! {e.FileName}");
-        }
-        catch (IOException e)
-        {
-            Logger.Error($"File opened by another application! {e.StackTrace}");
-        }
-
-        return baseStations;
+        await _package.SaveAsync();
     }
+    #endregion
 
     private static ExcelWorksheet? GetWorkSheet(string sheetName)
     {
