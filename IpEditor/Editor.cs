@@ -111,7 +111,7 @@ internal static class Editor
     }
 
     #region Edit
-    public static async Task EditIPCLKLNK(List<BaseStation> baseStations)
+    public static async Task EditIPCLKLNK(List<BaseStation> baseStations, string colBsName)
     {
         var nameSheet = "IPCLKLNK";
         var workSheet = GetWorkSheet(nameSheet);
@@ -121,7 +121,7 @@ internal static class Editor
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells["b:b"]
+            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -139,7 +139,7 @@ internal static class Editor
         await _package.SaveAsync();
     }
 
-    public static async Task EditOMCH(List<BaseStation> baseStations)
+    public static async Task EditOMCH(List<BaseStation> baseStations, string colBsName)
     {
         var nameSheet = "OMCH";
         var workSheet = GetWorkSheet(nameSheet);
@@ -149,7 +149,7 @@ internal static class Editor
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells["b:b"]
+            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -168,7 +168,7 @@ internal static class Editor
         await _package.SaveAsync();
     }
 
-    public static async Task EditSCTPLNK(List<BaseStation> baseStations)
+    public static async Task EditSCTPLNK(List<BaseStation> baseStations, string colBsName)
     {
         var nameSheet = "SCTPLNK";
         var workSheet = GetWorkSheet(nameSheet);
@@ -178,7 +178,7 @@ internal static class Editor
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells["b:b"]
+            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -196,7 +196,7 @@ internal static class Editor
         await _package.SaveAsync();
     }
 
-    public static async Task EditSCTPHOST(List<BaseStation> baseStations)
+    public static async Task EditSCTPHOST(List<BaseStation> baseStations, string colBsName)
     {
         var nameSheet = "SCTPHOST";
         var workSheet = GetWorkSheet(nameSheet);
@@ -206,7 +206,7 @@ internal static class Editor
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells["b:b"]
+            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -224,7 +224,7 @@ internal static class Editor
         await _package.SaveAsync();
     }
 
-    public static async Task EditUSERPLANEHOST(List<BaseStation> baseStations)
+    public static async Task EditUSERPLANEHOST(List<BaseStation> baseStations, string colBsName)
     {
         var nameSheet = "USERPLANEHOST";
         var workSheet = GetWorkSheet(nameSheet);
@@ -234,7 +234,7 @@ internal static class Editor
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells["b:b"]
+            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -252,7 +252,7 @@ internal static class Editor
         await _package.SaveAsync();
     }
 
-    public static async Task EditIPPATH(List<BaseStation> baseStations)
+    public static async Task EditIPPATH(List<BaseStation> baseStations, string colBsName)
     {
         var nameSheet = "IPPATH";
         var workSheet = GetWorkSheet(nameSheet);
@@ -262,7 +262,7 @@ internal static class Editor
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells["b:b"]
+            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -280,7 +280,7 @@ internal static class Editor
         await _package.SaveAsync();
     }
 
-    public static async Task EditSRCIPRT(List<BaseStation> baseStations)
+    public static async Task EditSRCIPRT(List<BaseStation> baseStations, string colBsName)
     {
         var nameSheet = "SRCIPRT";
         var workSheet = GetWorkSheet(nameSheet);
@@ -290,7 +290,7 @@ internal static class Editor
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells["b:b"]
+            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();

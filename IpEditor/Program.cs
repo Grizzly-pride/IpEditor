@@ -27,13 +27,13 @@ if(baseStations.Count is not 0)
     if (await Editor.OpenTargetFile(settings?.TargetFile.PathFile ?? targetFilePath))
     {
         await Task.WhenAll(
-            Editor.EditIPCLKLNK(baseStations),
-            Editor.EditOMCH(baseStations),
-            Editor.EditSCTPLNK(baseStations),
-            Editor.EditSCTPHOST(baseStations),
-            Editor.EditUSERPLANEHOST(baseStations),
-            Editor.EditIPPATH(baseStations),
-            Editor.EditSRCIPRT(baseStations),
+            Editor.EditIPCLKLNK(baseStations, settings!.TargetFile.SheetIPCLKLNK.Bs!),
+            Editor.EditOMCH(baseStations, settings.TargetFile.SheetOMCH.Bs!),
+            Editor.EditSCTPLNK(baseStations, settings.TargetFile.SheetSCTPLNK.Bs!),
+            Editor.EditSCTPHOST(baseStations, settings.TargetFile.SheetSCTPHOST.Bs!),
+            Editor.EditUSERPLANEHOST(baseStations, settings.TargetFile.SheetUSERPLANEHOST.Bs!),
+            Editor.EditIPPATH(baseStations, settings.TargetFile.SheetIPPATH.Bs!),
+            Editor.EditSRCIPRT(baseStations, settings.TargetFile.SheetSRCIPRT.Bs!),
             Editor.EditDEVIP(baseStations));
 
         Editor.CloseTargetFile();
