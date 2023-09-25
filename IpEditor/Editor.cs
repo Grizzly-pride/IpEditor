@@ -8,82 +8,99 @@ internal static class Editor
 
     public static async Task<List<BaseStation>> LoadSourceData(string filePath)
     {
-        var baseStations = new List<BaseStation>();
+        List<BaseStation> baseStations = new List<BaseStation>();
 
         try
         {
             var file = new FileInfo(filePath);
-            using var package = new ExcelPackage(file);
-            await package.LoadAsync(file);
-
-            var workSheet = package.Workbook.Worksheets.First();
-
-            int row = 2;
-            int column = 1;
-
-            Logger.Info($"Loading data from a source file...");
-
-            while (string.IsNullOrWhiteSpace(workSheet.Cells[row, column].Value?.ToString()) is false)
+            if(file.Exists)
             {
-                string nameBS = workSheet.Cells[row, column].Value.ToString()!;
+                using var package = new ExcelPackage(file);
+                await package.LoadAsync(file);
 
-                string sourceOAM = workSheet.Cells[row, column + 1].Value.ToString()!;
-                string nextHopOAM = workSheet.Cells[row, column + 2].Value.ToString()!;
-                string vlanOAM = workSheet.Cells[row, column + 3].Value.ToString()!;
-                string maskOAM = workSheet.Cells[row, column + 4].Value.ToString()!;
-                var oam = new Route(sourceOAM, nextHopOAM, vlanOAM, maskOAM);
+                var workSheet = package.Workbook.Worksheets.First();
 
-                string sourceS1C = workSheet.Cells[row, column + 5].Value.ToString()!;
-                string nextHopS1C = workSheet.Cells[row, column + 6].Value.ToString()!;
-                string vlanS1C = workSheet.Cells[row, column + 7].Value.ToString()!;
-                string maskS1C = workSheet.Cells[row, column + 8].Value.ToString()!;
-                var s1c = new Route(sourceS1C, nextHopS1C, vlanS1C, maskS1C);
+                int row = 2;
+                int column = 1;
 
-                string sourceS1U = workSheet.Cells[row, column + 5].Value.ToString()!;
-                string nextHopS1U = workSheet.Cells[row, column + 6].Value.ToString()!;
-                string vlanS1U = workSheet.Cells[row, column + 7].Value.ToString()!;
-                string maskS1U = workSheet.Cells[row, column + 8].Value.ToString()!;
-                var s1u = new Route(sourceS1U, nextHopS1U, vlanS1U, maskS1U);
+                Logger.Info($"Loading data from a source file...");
 
-                var bs = new BaseStation(nameBS, oam, s1c, s1u);
+                while (string.IsNullOrWhiteSpace(workSheet.Cells[row, column].Value?.ToString()) is false)
+                {
+                    string nameBS = workSheet.Cells[row, column].Value.ToString()!;
 
-                baseStations.Add(bs);
+                    string sourceOAM = workSheet.Cells[row, column + 1].Value.ToString()!;
+                    string nextHopOAM = workSheet.Cells[row, column + 2].Value.ToString()!;
+                    string vlanOAM = workSheet.Cells[row, column + 3].Value.ToString()!;
+                    string maskOAM = workSheet.Cells[row, column + 4].Value.ToString()!;
+                    var oam = new Route(sourceOAM, nextHopOAM, vlanOAM, maskOAM);
 
-                Logger.Info($"... eNodeB: {bs.Name} has been added.");
+                    string sourceS1C = workSheet.Cells[row, column + 5].Value.ToString()!;
+                    string nextHopS1C = workSheet.Cells[row, column + 6].Value.ToString()!;
+                    string vlanS1C = workSheet.Cells[row, column + 7].Value.ToString()!;
+                    string maskS1C = workSheet.Cells[row, column + 8].Value.ToString()!;
+                    var s1c = new Route(sourceS1C, nextHopS1C, vlanS1C, maskS1C);
 
-                row += 1;
+                    string sourceS1U = workSheet.Cells[row, column + 5].Value.ToString()!;
+                    string nextHopS1U = workSheet.Cells[row, column + 6].Value.ToString()!;
+                    string vlanS1U = workSheet.Cells[row, column + 7].Value.ToString()!;
+                    string maskS1U = workSheet.Cells[row, column + 8].Value.ToString()!;
+                    var s1u = new Route(sourceS1U, nextHopS1U, vlanS1U, maskS1U);
+
+                    var bs = new BaseStation(nameBS, oam, s1c, s1u);
+
+                    baseStations.Add(bs);
+
+                    Logger.Info($"... eNodeB: {bs.Name} has been added.");
+
+                    row += 1;
+                }
             }
         }
-        catch (FileNotFoundException e)
+        catch (Exception e)
         {
-            Logger.Error($"File not found! {e.FileName}");
-        }
-        catch (IOException e)
-        {
-            Logger.Error($"File opened by another application! {e.StackTrace}");
+            if(e is FileNotFoundException fileNotFound)
+            {
+                Logger.Error($"File not found! {fileNotFound.FileName}");
+            }
+            else if(e is IOException io)
+            {
+                Logger.Error($"File opened by another application! {io.Source}");
+            }
+
+            Logger.Error($"{e.StackTrace}");
         }
 
         return baseStations;
     }
 
-    public static async Task OpenTargetFile(string filePath)
+    public static async Task<bool> OpenTargetFile(string filePath)
     {
         try
         {
             var file = new FileInfo(filePath);
-            if (file.Exists)
+            bool isExistsFile = file.Exists;
+            if (isExistsFile) 
             {
                 _package = new ExcelPackage(file);
                 await _package.LoadAsync(file);
             }
+            return isExistsFile;
         }
-        catch (FileNotFoundException e)
+        catch(Exception e)
         {
-            Logger.Error($"File not found! {e.FileName}");
-        }
-        catch (IOException e)
-        {
-            Logger.Error($"File opened by another application! {e.StackTrace}");
+            if (e is FileNotFoundException fileNotFound)
+            {
+                Logger.Error($"File not found! {fileNotFound.FileName}");
+            }
+            else if (e is IOException io)
+            {
+                Logger.Error($"File opened by another application! {io.Source}");
+            }
+
+            Logger.Error($"{e.StackTrace}");
+
+            return false;
         }
     }
 
