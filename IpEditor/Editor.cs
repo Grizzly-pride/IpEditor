@@ -1,4 +1,6 @@
 ﻿using IpEditor.Entity;
+using IpEditor.Entity.ExcelData;
+using IpEditor.Entity.ExcelData.Sheets;
 using OfficeOpenXml;
 namespace IpEditor;
 
@@ -7,56 +9,80 @@ internal static class Editor
 {
     private static ExcelPackage _package;
 
-    public static async Task<List<BaseStation>> LoadSourceData(string filePath)
+    public static async Task<List<BaseStation>> LoadSourceData(SourceFile sourceFile)
     {
+        string sourceFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data", "Source.xlsx");
         List<BaseStation> baseStations = new List<BaseStation>();
 
         try
         {
-            var file = new FileInfo(filePath);
-            if(file.Exists)
+            var file = new FileInfo(sourceFile.PathFile ?? sourceFilePath);
+           
+            using var package = new ExcelPackage(file);
+            await package.LoadAsync(file);
+
+            var workSheet = package.Workbook.Worksheets.First();
+
+            #region Columns
+            int startRow = 2;
+
+            int colBsName = sourceFile.BSName.ExcelColNameToInt();
+
+            int colBsOAM = sourceFile.OAM.SourceIp.ExcelColNameToInt();
+            int colGatewayOAM = sourceFile.OAM.DestinationIp.ExcelColNameToInt();
+            int colVlanOAM = sourceFile.OAM.Vlan.ExcelColNameToInt();
+            int colMaskOAM = sourceFile.OAM.Mask.ExcelColNameToInt();
+            int colLabelOAM = sourceFile.OAM.Label.ExcelColNameToInt();
+
+            int colBsS1U = sourceFile.S1U.SourceIp.ExcelColNameToInt();
+            int colGatewayS1U = sourceFile.S1U.DestinationIp.ExcelColNameToInt();
+            int colVlanS1U = sourceFile.S1U.Vlan.ExcelColNameToInt();
+            int colMaskS1U = sourceFile.S1U.Mask.ExcelColNameToInt();
+            int colLabelS1U = sourceFile.S1U.Label.ExcelColNameToInt();
+
+            int colBsS1C = sourceFile.S1C.SourceIp.ExcelColNameToInt();
+            int colGatewayS1C = sourceFile.S1C.DestinationIp.ExcelColNameToInt();
+            int colVlanS1C = sourceFile.S1C.Vlan.ExcelColNameToInt();
+            int colMaskS1C = sourceFile.S1C.Mask.ExcelColNameToInt();
+            int colLabelS1C = sourceFile.S1C.Label.ExcelColNameToInt();
+            #endregion
+
+            Logger.Info($"[ Loading data from a source file ]");
+
+            while (string.IsNullOrWhiteSpace(workSheet.Cells[startRow, colBsName].Value?.ToString()) is false)
             {
-                using var package = new ExcelPackage(file);
-                await package.LoadAsync(file);
+                string nameBS = workSheet.Cells[startRow, colBsName].Value.ToString()!;
 
-                var workSheet = package.Workbook.Worksheets.First();
+                string sourceOAM = workSheet.Cells[startRow, colBsOAM].Value.ToString()!;
+                string nextHopOAM = workSheet.Cells[startRow, colGatewayOAM].Value.ToString()!;
+                string vlanOAM = workSheet.Cells[startRow, colVlanOAM].Value.ToString()!;
+                string maskOAM = workSheet.Cells[startRow, colMaskOAM].Value.ToString()!;
+                string labelOAM = workSheet.Cells[startRow, colLabelOAM].Value.ToString()!;
+                var oam = new Route(sourceOAM, nextHopOAM, vlanOAM, maskOAM, labelOAM);
 
-                int row = 2;
-                int column = 1;
+                string sourceS1U = workSheet.Cells[startRow, colBsS1U].Value.ToString()!;
+                string nextHopS1U = workSheet.Cells[startRow, colGatewayS1U].Value.ToString()!;
+                string vlanS1U = workSheet.Cells[startRow, colVlanS1U].Value.ToString()!;
+                string maskS1U = workSheet.Cells[startRow, colMaskS1U].Value.ToString()!;
+                string labelS1U = workSheet.Cells[startRow, colLabelS1U].Value.ToString()!;
+                var s1u = new Route(sourceS1U, nextHopS1U, vlanS1U, maskS1U, labelS1U);
 
-                Logger.Info($"Loading data from a source file...");
+                string sourceS1C = workSheet.Cells[startRow, colBsS1C].Value.ToString()!;
+                string nextHopS1C = workSheet.Cells[startRow, colGatewayS1C].Value.ToString()!;
+                string vlanS1C = workSheet.Cells[startRow, colVlanS1C].Value.ToString()!;
+                string maskS1C = workSheet.Cells[startRow, colMaskS1C].Value.ToString()!;
+                string labelS1C = workSheet.Cells[startRow, colLabelS1C].Value.ToString()!;
+                var s1c = new Route(sourceS1C, nextHopS1C, vlanS1C, maskS1C, labelS1C);
 
-                while (string.IsNullOrWhiteSpace(workSheet.Cells[row, column].Value?.ToString()) is false)
-                {
-                    string nameBS = workSheet.Cells[row, column].Value.ToString()!;
+                var bs = new BaseStation(nameBS, oam, s1c, s1u);
 
-                    string sourceOAM = workSheet.Cells[row, column + 1].Value.ToString()!;
-                    string nextHopOAM = workSheet.Cells[row, column + 2].Value.ToString()!;
-                    string vlanOAM = workSheet.Cells[row, column + 3].Value.ToString()!;
-                    string maskOAM = workSheet.Cells[row, column + 4].Value.ToString()!;
-                    var oam = new Route(sourceOAM, nextHopOAM, vlanOAM, maskOAM);
+                baseStations.Add(bs);
 
-                    string sourceS1C = workSheet.Cells[row, column + 5].Value.ToString()!;
-                    string nextHopS1C = workSheet.Cells[row, column + 6].Value.ToString()!;
-                    string vlanS1C = workSheet.Cells[row, column + 7].Value.ToString()!;
-                    string maskS1C = workSheet.Cells[row, column + 8].Value.ToString()!;
-                    var s1c = new Route(sourceS1C, nextHopS1C, vlanS1C, maskS1C);
+                Logger.Info($"... eNodeB: {bs.Name} has been added.");
 
-                    string sourceS1U = workSheet.Cells[row, column + 5].Value.ToString()!;
-                    string nextHopS1U = workSheet.Cells[row, column + 6].Value.ToString()!;
-                    string vlanS1U = workSheet.Cells[row, column + 7].Value.ToString()!;
-                    string maskS1U = workSheet.Cells[row, column + 8].Value.ToString()!;
-                    var s1u = new Route(sourceS1U, nextHopS1U, vlanS1U, maskS1U);
-
-                    var bs = new BaseStation(nameBS, oam, s1c, s1u);
-
-                    baseStations.Add(bs);
-
-                    Logger.Info($"... eNodeB: {bs.Name} has been added.");
-
-                    row += 1;
-                }
+                startRow += 1;
             }
+            
         }
         catch (Exception e)
         {
@@ -80,13 +106,10 @@ internal static class Editor
         try
         {
             var file = new FileInfo(filePath);
-            bool isExistsFile = file.Exists;
-            if (isExistsFile) 
-            {
-                _package = new ExcelPackage(file);
-                await _package.LoadAsync(file);
-            }
-            return isExistsFile;
+            _package = new ExcelPackage(file);
+            await _package.LoadAsync(file);
+
+            return file.Exists;
         }
         catch(Exception e)
         {
@@ -111,17 +134,20 @@ internal static class Editor
     }
 
     #region Edit
-    public static async Task EditIPCLKLNK(List<BaseStation> baseStations, string colBsName)
+    public static async Task EditIPCLKLNK(List<BaseStation> baseStations, SheetIPCLKLNK sheet)
     {
-        var nameSheet = "IPCLKLNK";
-        var workSheet = GetWorkSheet(nameSheet);
+        var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
 
-        Logger.Info($"Editing {nameSheet}...");
+        int colOper = sheet.Operation!.ExcelColNameToInt();
+        int colIPv4 = sheet.ClientIPv4!.ExcelColNameToInt();
+
+
+        Logger.Info($"[ Editing {sheet.SheetName} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
+            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -130,26 +156,29 @@ internal static class Editor
             {
                 foreach (var row in rows)
                 {
-                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
-                    workSheet.Cells[row, 8].Value = bs.S1C.SourceIp;
+                    workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, colIPv4].Value = bs.S1C.SourceIp;
                 }
-                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... edited {sheet.SheetName} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
     }
 
-    public static async Task EditOMCH(List<BaseStation> baseStations, string colBsName)
+    public static async Task EditOMCH(List<BaseStation> baseStations, SheetOMCH sheet)
     {
-        var nameSheet = "OMCH";
-        var workSheet = GetWorkSheet(nameSheet);
+        var workSheet = GetWorkSheet(sheet.SheetName);
         if (workSheet is null) return;
 
-        Logger.Info($"Editing {nameSheet}...");
+        int colOper = sheet.Operation!.ExcelColNameToInt();
+        int colIp = sheet.LocalIP.ExcelColNameToInt();
+        int colMask = sheet.LocalMask.ExcelColNameToInt();
+
+        Logger.Info($"[ Editing {sheet.SheetName} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
+            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -158,27 +187,29 @@ internal static class Editor
             {
                 foreach (var row in rows)
                 {
-                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
-                    workSheet.Cells[row, 6].Value = bs.OAM.SourceIp;
-                    workSheet.Cells[row, 7].Value = bs.OAM.Mask;                  
+                    workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, colIp].Value = bs.OAM.SourceIp;
+                    workSheet.Cells[row, colMask].Value = bs.OAM.Mask;                  
                 }
-                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... edited {sheet.SheetName} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
     }
 
-    public static async Task EditSCTPLNK(List<BaseStation> baseStations, string colBsName)
+    public static async Task EditSCTPLNK(List<BaseStation> baseStations, SheetSCTPLNK sheet)
     {
-        var nameSheet = "SCTPLNK";
-        var workSheet = GetWorkSheet(nameSheet);
+        var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
 
-        Logger.Info($"Editing {nameSheet}...");
+        int colOper = sheet.Operation!.ExcelColNameToInt();
+        int colIp = sheet.FirstLocalIPAddress!.ExcelColNameToInt();
+
+        Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
+            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -187,26 +218,28 @@ internal static class Editor
             {
                 foreach (var row in rows)
                 {
-                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
-                    workSheet.Cells[row, 14].Value = bs.S1C.SourceIp;
+                    workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, colIp].Value = bs.S1C.SourceIp;
                 }
-                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
     }
 
-    public static async Task EditSCTPHOST(List<BaseStation> baseStations, string colBsName)
+    public static async Task EditSCTPHOST(List<BaseStation> baseStations, SheetSCTPHOST sheet)
     {
-        var nameSheet = "SCTPHOST";
-        var workSheet = GetWorkSheet(nameSheet);
+        var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
 
-        Logger.Info($"Editing {nameSheet}...");
+        int colOper = sheet.Operation!.ExcelColNameToInt();
+        int colIp = sheet.FirstLocalIPAddress.ExcelColNameToInt();
+
+        Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
+            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -215,26 +248,28 @@ internal static class Editor
             {
                 foreach (var row in rows)
                 {
-                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
-                    workSheet.Cells[row, 6].Value = bs.S1C.SourceIp;
+                    workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, colIp].Value = bs.S1C.SourceIp;
                 }
-                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
     }
 
-    public static async Task EditUSERPLANEHOST(List<BaseStation> baseStations, string colBsName)
+    public static async Task EditUSERPLANEHOST(List<BaseStation> baseStations, SheetUSERPLANEHOST sheet)
     {
-        var nameSheet = "USERPLANEHOST";
-        var workSheet = GetWorkSheet(nameSheet);
+        var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
 
-        Logger.Info($"Editing {nameSheet}...");
+        int colOper = sheet.Operation!.ExcelColNameToInt();
+        int colIp = sheet.LocalIPAddress!.ExcelColNameToInt();
+
+        Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
+            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -243,26 +278,28 @@ internal static class Editor
             {
                 foreach (var row in rows)
                 {
-                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
-                    workSheet.Cells[row, 8].Value = bs.S1U.SourceIp;
+                    workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, colIp].Value = bs.S1U.SourceIp;
                 }
-                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
     }
 
-    public static async Task EditIPPATH(List<BaseStation> baseStations, string colBsName)
+    public static async Task EditIPPATH(List<BaseStation> baseStations, SheetIPPATH sheet)
     {
-        var nameSheet = "IPPATH";
-        var workSheet = GetWorkSheet(nameSheet);
+        var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
 
-        Logger.Info($"Editing {nameSheet}...");
+        int colOper = sheet.Operation!.ExcelColNameToInt();
+        int colIp = sheet.LocalIPAddress!.ExcelColNameToInt();
+
+        Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
+            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -271,26 +308,30 @@ internal static class Editor
             {
                 foreach (var row in rows)
                 {
-                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();
-                    workSheet.Cells[row, 20].Value = bs.S1U.SourceIp;
+                    workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
+                    workSheet.Cells[row, colIp].Value = bs.S1U.SourceIp;
                 }
-                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
     }
 
-    public static async Task EditSRCIPRT(List<BaseStation> baseStations, string colBsName)
+    public static async Task EditSRCIPRT(List<BaseStation> baseStations, SheetSRCIPRT sheet)
     {
-        var nameSheet = "SRCIPRT";
-        var workSheet = GetWorkSheet(nameSheet);
+        var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
 
-        Logger.Info($"Editing {nameSheet}...");
+        int colOper = sheet.Operation!.ExcelColNameToInt();
+        int colSourceIp = sheet.SourceIPAddress!.ExcelColNameToInt();
+        int colGatewayIp = sheet.NextHopIP!.ExcelColNameToInt();
+        int colLabel = sheet.UserLabel.ExcelColNameToInt();
+
+        Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{colBsName}:{colBsName}"]
+            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -299,33 +340,38 @@ internal static class Editor
             {
                 foreach (var row in rows)
                 {
-                    workSheet.Cells[row, 1].Value = Operation.MOD.ToString();                   
+                    workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();                   
                 }
-                workSheet.Cells[rows[0], 8].Value = bs.OAM.SourceIp;
-                workSheet.Cells[rows[0], 10].Value = bs.OAM.DestinationIp;
-                workSheet.Cells[rows[0], 14].Value = "O&M";
+                workSheet.Cells[rows[0], colSourceIp].Value = bs.OAM.SourceIp;
+                workSheet.Cells[rows[0], colGatewayIp].Value = bs.OAM.DestinationIp;
+                workSheet.Cells[rows[0], colLabel].Value = bs.OAM.Label;
 
-                workSheet.Cells[rows[1], 8].Value = bs.S1U.SourceIp;
-                workSheet.Cells[rows[1], 10].Value = bs.S1U.DestinationIp;
-                workSheet.Cells[rows[1], 14].Value = "S1U-MTS";
+                workSheet.Cells[rows[1], colSourceIp].Value = bs.S1U.SourceIp;
+                workSheet.Cells[rows[1], colGatewayIp].Value = bs.S1U.DestinationIp;
+                workSheet.Cells[rows[1], colLabel].Value = bs.S1U.Label;
 
-                workSheet.Cells[rows[2], 8].Value = bs.S1C.SourceIp;
-                workSheet.Cells[rows[2], 10].Value = bs.S1C.DestinationIp;
-                workSheet.Cells[rows[2], 14].Value = "S1C-MTS";
+                workSheet.Cells[rows[2], colSourceIp].Value = bs.S1C.SourceIp;
+                workSheet.Cells[rows[2], colGatewayIp].Value = bs.S1C.DestinationIp;
+                workSheet.Cells[rows[2], colLabel].Value = bs.S1C.Label;
 
-                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();
     }
 
-    public static async Task EditDEVIP(List<BaseStation> baseStations)
+    public static async Task EditDEVIP(List<BaseStation> baseStations, SheetDEVIP sheet)
     {
-        var nameSheet = "DEVIP";
-        var workSheet = GetWorkSheet(nameSheet);
+        var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
 
-        Logger.Info($"Editing {nameSheet}...");
+        int colOper = sheet.Operation!.ExcelColNameToInt();
+        int colBs = sheet.Bs!.ExcelColNameToInt(); 
+        int colIp = sheet.IPAddress.ExcelColNameToInt();
+        int colM = sheet.Mask.ExcelColNameToInt();
+        int colU = sheet.UserLabel.ExcelColNameToInt();
+
+        Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         var lastUsedRow = GetLastUsedRow(workSheet);
         var firstRow = workSheet.Dimension.Start.Row;
@@ -335,14 +381,15 @@ internal static class Editor
 
         workRange.Copy(workSheet.Cells[lastUsedRow + 1, firstColumn]);
 
+        var colOperIndex = colOper - 1;
         for ( int i = 0; i < workRange.Rows; i++ )
         {
-            workRange.SetCellValue(i, 0, Operation.RMV.ToString());
+            workRange.SetCellValue(i, colOperIndex, Operation.RMV.ToString());
         }
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[lastUsedRow + 1, 2, lastUsedRow + workRange.Rows, 2]
+            var rows = workSheet!.Cells[lastUsedRow + 1, colBs, lastUsedRow + workRange.Rows, colBs]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -351,33 +398,38 @@ internal static class Editor
             {
                 foreach (var row in rows)
                 {
-                    workSheet.Cells[row, 1].Value = Operation.ADD.ToString();
+                    workSheet.Cells[row, colOper].Value = Operation.ADD.ToString();
                 }
-                workSheet.Cells[rows[0], 10].Value = bs.OAM.SourceIp;
-                workSheet.Cells[rows[0], 11].Value = bs.OAM.Mask;
-                workSheet.Cells[rows[0], 12].Value = "O&M";
+                workSheet.Cells[rows[0], colIp].Value = bs.OAM.SourceIp;
+                workSheet.Cells[rows[0], colM].Value = bs.OAM.Mask;
+                workSheet.Cells[rows[0], colU].Value = bs.OAM.Label;
 
-                workSheet.Cells[rows[1], 10].Value = bs.S1U.SourceIp;
-                workSheet.Cells[rows[1], 11].Value = bs.S1U.Mask;
-                workSheet.Cells[rows[1], 12].Value = "S1U-MTS";
+                workSheet.Cells[rows[1], colIp].Value = bs.S1U.SourceIp;
+                workSheet.Cells[rows[1], colM].Value = bs.S1U.Mask;
+                workSheet.Cells[rows[1], colU].Value = bs.S1U.Label;
 
-                workSheet.Cells[rows[2], 10].Value = bs.S1C.SourceIp;
-                workSheet.Cells[rows[2], 11].Value = bs.S1C.Mask;
-                workSheet.Cells[rows[2], 12].Value = "S1C-MTS";
+                workSheet.Cells[rows[2], colIp].Value = bs.S1C.SourceIp;
+                workSheet.Cells[rows[2], colM].Value = bs.S1C.Mask;
+                workSheet.Cells[rows[2], colU].Value = bs.S1C.Label;
 
-                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();       
     }
 
-    public static async Task EditVLANMAP(List<BaseStation> baseStations)
+    public static async Task EditVLANMAP(List<BaseStation> baseStations, SheetVLANMAP sheet)
     {
-        var nameSheet = "VLANMAP";
-        var workSheet = GetWorkSheet(nameSheet);
+        var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
 
-        Logger.Info($"Editing {nameSheet}...");
+        int colBs = sheet.Bs!.ExcelColNameToInt();
+        int colOper = sheet.Operation!.ExcelColNameToInt();
+        int colIp = sheet.NextHopIP!.ExcelColNameToInt();
+        int colM = sheet.Mask!.ExcelColNameToInt();
+        int colV = sheet.VLANID!.ExcelColNameToInt();
+
+        Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         var lastUsedRow = GetLastUsedRow(workSheet);
         var firstRow = workSheet.Dimension.Start.Row;
@@ -387,14 +439,15 @@ internal static class Editor
 
         workRange.Copy(workSheet.Cells[lastUsedRow + 1, firstColumn]);
 
+        var colOperIndex = colOper - 1;
         for (int i = 0; i < workRange.Rows; i++)
         {
-            workRange.SetCellValue(i, 0, Operation.RMV.ToString());
+            workRange.SetCellValue(i, colOperIndex, Operation.RMV.ToString());
         }
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[lastUsedRow + 1, 2, lastUsedRow + workRange.Rows, 2]
+            var rows = workSheet!.Cells[lastUsedRow + 1, colBs, lastUsedRow + workRange.Rows, colBs]
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -403,21 +456,21 @@ internal static class Editor
             {
                 foreach (var row in rows)
                 {
-                    workSheet.Cells[row, 1].Value = Operation.ADD.ToString();
+                    workSheet.Cells[row, colOper].Value = Operation.ADD.ToString();
                 }
-                workSheet.Cells[rows[0], 4].Value = bs.OAM.DestinationIp;
-                workSheet.Cells[rows[0], 5].Value = bs.OAM.Mask;
-                workSheet.Cells[rows[0], 7].Value = bs.OAM.Vlan;
+                workSheet.Cells[rows[0], colIp].Value = bs.OAM.DestinationIp;
+                workSheet.Cells[rows[0], colM].Value = bs.OAM.Mask;
+                workSheet.Cells[rows[0], colV].Value = bs.OAM.Vlan;
 
-                workSheet.Cells[rows[1], 4].Value = bs.S1C.DestinationIp;
-                workSheet.Cells[rows[1], 5].Value = bs.OAM.Mask;
-                workSheet.Cells[rows[1], 7].Value = bs.OAM.Vlan;
+                workSheet.Cells[rows[1], colIp].Value = bs.S1C.DestinationIp;
+                workSheet.Cells[rows[1], colM].Value = bs.OAM.Mask;
+                workSheet.Cells[rows[1], colV].Value = bs.OAM.Vlan;
 
-                workSheet.Cells[rows[2], 4].Value = bs.OAM.DestinationIp;
-                workSheet.Cells[rows[2], 5].Value = bs.OAM.Mask;
-                workSheet.Cells[rows[2], 7].Value = bs.OAM.Vlan;
+                workSheet.Cells[rows[2], colIp].Value = bs.OAM.DestinationIp;
+                workSheet.Cells[rows[2], colM].Value = bs.OAM.Mask;
+                workSheet.Cells[rows[2], colV].Value = bs.OAM.Vlan;
 
-                Logger.Info($"... edited {nameSheet} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
         await _package.SaveAsync();

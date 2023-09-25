@@ -2,6 +2,6 @@
 
 internal sealed class SheetOMCH : Sheet
 {
-    public string? LocalIP { get; init; }
-    public string? LocalMask { get; init; }
+    public required string LocalIP { get; init; }
+    public required string LocalMask { get; init; }
 }

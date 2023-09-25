@@ -2,7 +2,7 @@
 
 internal sealed class SheetSRCIPRT : Sheet
 {
-    public string? SourceIPAddress { get; init; }
-    public string? NextHopIP { get; init; }
-    public string? UserLabel { get; init; }
+    public required string SourceIPAddress { get; init; }
+    public required string NextHopIP { get; init; }
+    public required string UserLabel { get; init; }
 }

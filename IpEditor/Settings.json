@@ -5,17 +5,20 @@
         "SourceIp":"B",
         "DestinationIp":"C",
         "Vlan":"D",
-        "Mask":"E"},
-    "S1C":{
-        "SourceIp":"F",
-        "DestinationIp":"G",
-        "Vlan":"H",
-        "Mask":"I"},
+        "Mask":"E",
+        "Label":"F"},
     "S1U":{
-        "SourceIp":"J",
-        "DestinationIp":"K",
-        "Vlan":"L",
-        "Mask":"M"}
+        "SourceIp":"G",
+        "DestinationIp":"H",
+        "Vlan":"I",
+        "Mask":"J",
+        "Label":"K"},
+    "S1C":{
+        "SourceIp":"L",
+        "DestinationIp":"M",
+        "Vlan":"N",
+        "Mask":"O",
+        "Label":"P"}
     },
     "TargetFile":{
         "PathFile":null,

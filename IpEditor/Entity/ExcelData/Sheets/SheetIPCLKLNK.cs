@@ -2,5 +2,5 @@
 
 internal sealed class SheetIPCLKLNK : Sheet
 {
-    public string? ClientIPv4 { get; init; }
+    public required string ClientIPv4 { get; init; }
 }

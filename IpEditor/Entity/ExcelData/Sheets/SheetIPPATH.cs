@@ -2,5 +2,5 @@
 
 internal sealed class SheetIPPATH : Sheet
 {
-    public string? LocalIPAddress { get; init; }
+    public required string LocalIPAddress { get; init; }
 }

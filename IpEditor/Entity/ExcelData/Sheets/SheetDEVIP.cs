@@ -2,7 +2,7 @@
 
 internal sealed class SheetDEVIP : Sheet
 {
-    public string? IPAddress { get; init; }
-    public string? Mask { get; init; }
-    public string? UserLabel { get; init; }
+    public required string IPAddress { get; init; }
+    public required string Mask { get; init; }
+    public required string UserLabel { get; init; }
 }

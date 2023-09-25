@@ -2,7 +2,7 @@
 
 internal sealed class SheetVLANMAP : Sheet
 {
-    public string? NextHopIP { get; init; }
-    public string? Mask { get; init; }
-    public string? VLANID { get; init; }
+    public required string NextHopIP { get; init; }
+    public required string Mask { get; init; }
+    public required string VLANID { get; init; }
 }

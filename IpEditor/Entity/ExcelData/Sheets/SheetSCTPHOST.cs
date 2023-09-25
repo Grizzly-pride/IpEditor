@@ -2,5 +2,5 @@
 
 internal sealed class SheetSCTPHOST : Sheet
 {
-    public string? FirstLocalIPAddress { get; init; }
+    public required string FirstLocalIPAddress { get; init; }
 }
