@@ -1,11 +1,12 @@
 ﻿using IpEditor.Entity.ExcelData;
+using System.Diagnostics;
 
 namespace IpEditor;
 
-internal sealed class Settings
+internal class Settings
 {
     [NonSerialized]
-    private readonly string _logo = @"
+    private const string _logo = @"
   _____ _____    ______    _ _ _              
  |_   _|  __ \  |  ____|  | (_) |             
    | | | |__) | | |__   __| |_| |_ ___  _ __  
@@ -16,12 +17,11 @@ internal sealed class Settings
  Tool for edit eNodeB transport in Huawei bulk configuration file.
 
 ";
-
     public SourceFile SourceFile { get; init; }
     public TargetFile TargetFile { get; init; }
 
 
-    public void PrintLogo(ConsoleColor color)
+    public static void PrintLogo(ConsoleColor color)
     {
         Console.ForegroundColor = color;
         Console.WriteLine(_logo);
