@@ -1,4 +1,5 @@
-﻿using OfficeOpenXml;
+﻿using IpEditor.Entity;
+using OfficeOpenXml;
 namespace IpEditor;
 
 
