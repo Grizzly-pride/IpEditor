@@ -5,5 +5,6 @@ Editing Excel files "Bulk Configuration Data" which were exported from MAE Huawe
 ### libraries
 - EPPlus - Excel spreadsheets for .NET
 
-  ![image](https://github.com/Grizzly-pride/IpEditor/assets/35379801/54160c78-3753-4ce4-a3c5-dc23eec0c84c)
+![image](https://github.com/Grizzly-pride/IpEditor/assets/35379801/69c62441-8d18-464b-80c5-f0791c379f67)
+
 
