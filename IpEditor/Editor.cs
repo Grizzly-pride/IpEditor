@@ -128,17 +128,27 @@ internal static class Editor
         }
     }
 
-    public static void CloseTargetFile()
+    public static async Task CloseTargetFile()
     {
-        _package?.Dispose();
+        try
+        {
+            await _package.SaveAsync();
+        }
+        catch (InvalidOperationException e) 
+        {
+            Logger.Error(e.Message);
+        }
+        finally
+        {
+            _package?.Dispose();
+        }
     }
 
     #region Edit
-    public static async Task EditIPCLKLNK(List<BaseStation> baseStations, SheetIPCLKLNK sheet)
+    public static void EditIPCLKLNK(List<BaseStation> baseStations, SheetIPCLKLNK sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
-
         int colOper = sheet.Operation!.ExcelColNameToInt();
         int colIPv4 = sheet.ClientIPv4!.ExcelColNameToInt();
 
@@ -162,10 +172,9 @@ internal static class Editor
                 Logger.Info($"... edited {sheet.SheetName} for eNodeB {bs.Name} successfully.");
             }
         }
-        await _package.SaveAsync();
     }
 
-    public static async Task EditOMCH(List<BaseStation> baseStations, SheetOMCH sheet)
+    public static void EditOMCH(List<BaseStation> baseStations, SheetOMCH sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName);
         if (workSheet is null) return;
@@ -194,10 +203,9 @@ internal static class Editor
                 Logger.Info($"... edited {sheet.SheetName} for eNodeB {bs.Name} successfully.");
             }
         }
-        await _package.SaveAsync();
     }
 
-    public static async Task EditSCTPLNK(List<BaseStation> baseStations, SheetSCTPLNK sheet)
+    public static void EditSCTPLNK(List<BaseStation> baseStations, SheetSCTPLNK sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
@@ -224,10 +232,9 @@ internal static class Editor
                 Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
-        await _package.SaveAsync();
     }
 
-    public static async Task EditSCTPHOST(List<BaseStation> baseStations, SheetSCTPHOST sheet)
+    public static void EditSCTPHOST(List<BaseStation> baseStations, SheetSCTPHOST sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
@@ -254,10 +261,9 @@ internal static class Editor
                 Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
-        await _package.SaveAsync();
     }
 
-    public static async Task EditUSERPLANEHOST(List<BaseStation> baseStations, SheetUSERPLANEHOST sheet)
+    public static void EditUSERPLANEHOST(List<BaseStation> baseStations, SheetUSERPLANEHOST sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
@@ -284,10 +290,9 @@ internal static class Editor
                 Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
-        await _package.SaveAsync();
     }
 
-    public static async Task EditIPPATH(List<BaseStation> baseStations, SheetIPPATH sheet)
+    public static void EditIPPATH(List<BaseStation> baseStations, SheetIPPATH sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
@@ -314,10 +319,9 @@ internal static class Editor
                 Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
-        await _package.SaveAsync();
     }
 
-    public static async Task EditSRCIPRT(List<BaseStation> baseStations, SheetSRCIPRT sheet)
+    public static void EditSRCIPRT(List<BaseStation> baseStations, SheetSRCIPRT sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
@@ -357,10 +361,9 @@ internal static class Editor
                 Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
-        await _package.SaveAsync();
     }
 
-    public static async Task EditDEVIP(List<BaseStation> baseStations, SheetDEVIP sheet)
+    public static void EditDEVIP(List<BaseStation> baseStations, SheetDEVIP sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
@@ -414,11 +417,10 @@ internal static class Editor
 
                 Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
-        }
-        await _package.SaveAsync();       
+        }      
     }
 
-    public static async Task EditVLANMAP(List<BaseStation> baseStations, SheetVLANMAP sheet)
+    public static void EditVLANMAP(List<BaseStation> baseStations, SheetVLANMAP sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
@@ -473,7 +475,6 @@ internal static class Editor
                 Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
             }
         }
-        await _package.SaveAsync();
     }
     #endregion
 

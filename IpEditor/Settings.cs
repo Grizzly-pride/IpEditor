@@ -10,7 +10,7 @@ internal class Settings
    | | | |__) | | |__   __| |_| |_ ___  _ __  
    | | |  ___/  |  __| / _` | | __/ _ \| '__| 
   _| |_| |      | |___| (_| | | || (_) | |    
- |_____|_|      |______\__,_|_|\__\___/|_|   v 0.1
+ |_____|_|      |______\__,_|_|\__\___/|_|   v 0.2
                                                                                            
  Tool for edit eNodeB transport in Huawei bulk configuration file.
 
@@ -30,7 +30,7 @@ internal class Settings
     {
         Console.ForegroundColor = color;
         Console.WriteLine();
-        Console.WriteLine(" Таск has been completed.");
+        Console.WriteLine("*** Таsк has been completed. ***");
         Console.ForegroundColor = ConsoleColor.White;
     }
 }
