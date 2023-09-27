@@ -3,6 +3,7 @@ using IpEditor.Entity;
 using OfficeOpenXml;
 using System.Text.Json;
 
+
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 string basePath = AppDomain.CurrentDomain.BaseDirectory;
@@ -26,6 +27,7 @@ if(baseStations.Count is not 0)
 
     if (await Editor.OpenTargetFile(settings?.TargetFile.PathFile ?? targetFilePath))
     {
+        Editor.CheckTargetBS(baseStations, targetFile.SheetBSTransportData);
         Editor.EditIPCLKLNK(baseStations, targetFile.SheetIPCLKLNK); 
         Editor.EditOMCH(baseStations, targetFile.SheetOMCH);
         Editor.EditSCTPLNK(baseStations, targetFile.SheetSCTPLNK);

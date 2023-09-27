@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace IpEditor.Entity.ExcelData.Sheets;
+﻿namespace IpEditor.Entity.ExcelData.Sheets;
 
 internal abstract class Sheet
 {
