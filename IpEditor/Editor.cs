@@ -47,7 +47,7 @@ internal static class Editor
             int colLabelS1C = sourceFile.S1C.Label.ExcelColNameToInt();
             #endregion
 
-            Logger.Info($"[ Loading data from a source file ]");
+            Logger.Info($"[ Loading data from the source file ]");
 
             while (string.IsNullOrWhiteSpace(workSheet.Cells[startRow, colBsName].Value?.ToString()) is false)
             {
@@ -128,6 +128,29 @@ internal static class Editor
         }
     }
 
+    public static void CheckTargetBS(List<BaseStation> baseStations, SheetBSTransportData sheet)
+    {
+        var workSheet = GetWorkSheet(sheet.SheetName!);
+        if (workSheet is null) return;
+
+        ExcelRange bsColumn = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"];
+
+        Logger.Info($"[ Checking the target file ]");
+
+        List<string> bsNotFound = baseStations.Select(i => i.Name)
+            .Except(bsColumn.ToArray().Select(i => i.Text).Distinct())
+            .ToList();
+
+        if (bsNotFound.Any())
+        {
+            bsNotFound.ForEach(bs => Logger.Warning($"... eNodeB: {bs} not found."));
+        }
+        else
+        {
+            Logger.Info("... all the eNodeb were found.");
+        }
+    }
+
     public static async Task CloseTargetFile()
     {
         try
@@ -149,15 +172,16 @@ internal static class Editor
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
         if (workSheet is null) return;
+
         int colOper = sheet.Operation!.ExcelColNameToInt();
         int colIPv4 = sheet.ClientIPv4!.ExcelColNameToInt();
-
+        ExcelRange bsColumn = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"];
 
         Logger.Info($"[ Editing {sheet.SheetName} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
+            var rows = bsColumn
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -169,7 +193,7 @@ internal static class Editor
                     workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, colIPv4].Value = bs.S1C.SourceIp;
                 }
-                Logger.Info($"... edited {sheet.SheetName} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }
         }
     }
@@ -182,6 +206,7 @@ internal static class Editor
         int colOper = sheet.Operation!.ExcelColNameToInt();
         int colIp = sheet.LocalIP.ExcelColNameToInt();
         int colMask = sheet.LocalMask.ExcelColNameToInt();
+        ExcelRange bsColumn = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"];
 
         Logger.Info($"[ Editing {sheet.SheetName} ]");
 
@@ -200,7 +225,7 @@ internal static class Editor
                     workSheet.Cells[row, colIp].Value = bs.OAM.SourceIp;
                     workSheet.Cells[row, colMask].Value = bs.OAM.Mask;                  
                 }
-                Logger.Info($"... edited {sheet.SheetName} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }
         }
     }
@@ -212,12 +237,13 @@ internal static class Editor
 
         int colOper = sheet.Operation!.ExcelColNameToInt();
         int colIp = sheet.FirstLocalIPAddress!.ExcelColNameToInt();
+        ExcelRange bsColumn = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"];
 
         Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
+            var rows = bsColumn
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -229,7 +255,7 @@ internal static class Editor
                     workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, colIp].Value = bs.S1C.SourceIp;
                 }
-                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }
         }
     }
@@ -241,12 +267,13 @@ internal static class Editor
 
         int colOper = sheet.Operation!.ExcelColNameToInt();
         int colIp = sheet.FirstLocalIPAddress.ExcelColNameToInt();
+        ExcelRange bsColumn = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"];
 
         Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
+            var rows = bsColumn
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -258,7 +285,7 @@ internal static class Editor
                     workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, colIp].Value = bs.S1C.SourceIp;
                 }
-                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }
         }
     }
@@ -270,12 +297,13 @@ internal static class Editor
 
         int colOper = sheet.Operation!.ExcelColNameToInt();
         int colIp = sheet.LocalIPAddress!.ExcelColNameToInt();
+        ExcelRange bsColumn = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"];
 
         Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
+            var rows = bsColumn
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -287,7 +315,7 @@ internal static class Editor
                     workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, colIp].Value = bs.S1U.SourceIp;
                 }
-                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }
         }
     }
@@ -299,12 +327,13 @@ internal static class Editor
 
         int colOper = sheet.Operation!.ExcelColNameToInt();
         int colIp = sheet.LocalIPAddress!.ExcelColNameToInt();
+        ExcelRange bsColumn = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"];
 
         Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
+            var rows = bsColumn
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -316,7 +345,7 @@ internal static class Editor
                     workSheet.Cells[row, colOper].Value = Operation.MOD.ToString();
                     workSheet.Cells[row, colIp].Value = bs.S1U.SourceIp;
                 }
-                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }
         }
     }
@@ -330,12 +359,13 @@ internal static class Editor
         int colSourceIp = sheet.SourceIPAddress!.ExcelColNameToInt();
         int colGatewayIp = sheet.NextHopIP!.ExcelColNameToInt();
         int colLabel = sheet.UserLabel.ExcelColNameToInt();
+        ExcelRange bsColumn = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"];
 
         Logger.Info($"[ Editing {sheet.SheetName!} ]");
 
         foreach (var bs in baseStations)
         {
-            var rows = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"]
+            var rows = bsColumn
                 .Where(cel => cel.Text.StartsWith(bs.Name, StringComparison.OrdinalIgnoreCase))
                 .Select(i => i.End.Row)
                 .ToList();
@@ -358,7 +388,7 @@ internal static class Editor
                 workSheet.Cells[rows[2], colGatewayIp].Value = bs.S1C.DestinationIp;
                 workSheet.Cells[rows[2], colLabel].Value = bs.S1C.Label;
 
-                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }
         }
     }
@@ -415,7 +445,7 @@ internal static class Editor
                 workSheet.Cells[rows[2], colM].Value = bs.S1C.Mask;
                 workSheet.Cells[rows[2], colU].Value = bs.S1C.Label;
 
-                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }
         }      
     }
@@ -472,7 +502,7 @@ internal static class Editor
                 workSheet.Cells[rows[2], colM].Value = bs.OAM.Mask;
                 workSheet.Cells[rows[2], colV].Value = bs.OAM.Vlan;
 
-                Logger.Info($"... edited {sheet.SheetName!} for eNodeB {bs.Name} successfully.");
+                Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }
         }
     }
