@@ -22,6 +22,10 @@
     },
     "TargetFile":{
         "PathFile":null,
+        "SheetBSTransportData":{
+            "SheetName":"Base Station Transport Data",
+            "Operation":null,
+            "Bs":"A"},
         "SheetIPCLKLNK":{
             "SheetName":"IPCLKLNK",
             "Operation":"A",
