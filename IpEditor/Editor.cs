@@ -2,6 +2,7 @@
 using IpEditor.Entity.ExcelData;
 using IpEditor.Entity.ExcelData.Sheets;
 using OfficeOpenXml;
+
 namespace IpEditor;
 
 
@@ -128,18 +129,18 @@ internal static class Editor
         }
     }
 
-    public static void CheckTargetBS(List<BaseStation> baseStations, SheetBSTransportData sheet)
+    public static List<string>? CheckTargetBS(List<BaseStation> baseStations, SheetBSTransportData sheet)
     {
         var workSheet = GetWorkSheet(sheet.SheetName!);
-        if (workSheet is null) return;
+        if (workSheet is null) return null;
 
         ExcelRange bsColumn = workSheet!.Cells[$"{sheet.Bs}:{sheet.Bs}"];
 
         Logger.Info($"[ Checking the target file ]");
 
-        List<string> bsNotFound = baseStations.Select(i => i.Name)
-            .Except(bsColumn.ToArray().Select(i => i.Text).Distinct())
-            .ToList();
+        List<string> listBsNamesFromSource = baseStations.Select(i => i.Name).ToList();
+        List<string> bsNotFound = listBsNamesFromSource.Except(bsColumn.ToArray()
+            .Select(i => i.Text).Distinct()).ToList();     
 
         if (bsNotFound.Any())
         {
@@ -149,6 +150,13 @@ internal static class Editor
         {
             Logger.Info("... all the eNodeb were found.");
         }
+
+        return bsNotFound;
+    }
+
+    public static List<BaseStation> GetUsedeNodeB(List<BaseStation> baseStations, List<string> baseStationsNotFound)
+    {
+        return baseStations.ExceptBy(baseStationsNotFound, bs => bs.Name).ToList();
     }
 
     public static async Task CloseTargetFile()
@@ -495,12 +503,12 @@ internal static class Editor
                 workSheet.Cells[rows[0], colV].Value = bs.OAM.Vlan;
 
                 workSheet.Cells[rows[1], colIp].Value = bs.S1C.DestinationIp;
-                workSheet.Cells[rows[1], colM].Value = bs.OAM.Mask;
-                workSheet.Cells[rows[1], colV].Value = bs.OAM.Vlan;
+                workSheet.Cells[rows[1], colM].Value = bs.S1C.Mask;
+                workSheet.Cells[rows[1], colV].Value = bs.S1C.Vlan;
 
-                workSheet.Cells[rows[2], colIp].Value = bs.OAM.DestinationIp;
-                workSheet.Cells[rows[2], colM].Value = bs.OAM.Mask;
-                workSheet.Cells[rows[2], colV].Value = bs.OAM.Vlan;
+                workSheet.Cells[rows[2], colIp].Value = bs.S1U.DestinationIp;
+                workSheet.Cells[rows[2], colM].Value = bs.S1U.Mask;
+                workSheet.Cells[rows[2], colV].Value = bs.S1U.Vlan;
 
                 Logger.Info($"... editing eNodeB {bs.Name} completed successfully.");
             }

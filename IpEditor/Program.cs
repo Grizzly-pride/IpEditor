@@ -27,20 +27,24 @@ if(baseStations.Count is not 0)
 
     if (await Editor.OpenTargetFile(settings?.TargetFile.PathFile ?? targetFilePath))
     {
-        Editor.CheckTargetBS(baseStations, targetFile.SheetBSTransportData);
-        Editor.EditIPCLKLNK(baseStations, targetFile.SheetIPCLKLNK); 
-        Editor.EditOMCH(baseStations, targetFile.SheetOMCH);
-        Editor.EditSCTPLNK(baseStations, targetFile.SheetSCTPLNK);
-        Editor.EditSCTPHOST(baseStations, targetFile.SheetSCTPHOST);
-        Editor.EditUSERPLANEHOST(baseStations, targetFile.SheetUSERPLANEHOST);
-        Editor.EditIPPATH(baseStations, targetFile.SheetIPPATH);
-        Editor.EditSRCIPRT(baseStations, targetFile.SheetSRCIPRT);
-        Editor.EditDEVIP(baseStations, targetFile.SheetDEVIP);
-        Editor.EditVLANMAP(baseStations, targetFile.SheetVLANMAP);
+        var bsNotFoundList = Editor.CheckTargetBS(baseStations, targetFile.SheetBSTransportData);
 
+        if (bsNotFoundList != null)
+        {
+            var usedBsList = Editor.GetUsedeNodeB(baseStations, bsNotFoundList);
+            Editor.EditIPCLKLNK(usedBsList, targetFile.SheetIPCLKLNK);
+            Editor.EditOMCH(usedBsList, targetFile.SheetOMCH);
+            Editor.EditSCTPLNK(usedBsList, targetFile.SheetSCTPLNK);
+            Editor.EditSCTPHOST(usedBsList, targetFile.SheetSCTPHOST);
+            Editor.EditUSERPLANEHOST(usedBsList, targetFile.SheetUSERPLANEHOST);
+            Editor.EditIPPATH(usedBsList, targetFile.SheetIPPATH);
+            Editor.EditSRCIPRT(usedBsList, targetFile.SheetSRCIPRT);
+            Editor.EditDEVIP(usedBsList, targetFile.SheetDEVIP);
+            Editor.EditVLANMAP(usedBsList, targetFile.SheetVLANMAP);
+
+            Settings.TaskCompletedMessage(ConsoleColor.Blue);
+        }
         await Editor.CloseTargetFile();
-
-        Settings.TaskCompletedMessage(ConsoleColor.Blue);
     }
 }
 
